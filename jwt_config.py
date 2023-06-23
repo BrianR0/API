@@ -6,5 +6,5 @@ def get_token(login:dict)-> str:
     return token
 
 def validate_token(token:str)->dict:
-    dato:dict = decode(token, key='mi_clave', algorithms=['SH256'])
+    dato:dict = decode(token, key='mi_clave', algorithms=['HS256'])
     return dato
