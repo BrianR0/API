@@ -6,13 +6,17 @@ from pydantic import BaseModel, Field
 from typing import Optional,List
 
 from starlette.requests import Request
-
+from config.base_de_datos import sesion, motor, base
+from modelos.venta import Acuario
 from jwt_config import *
+
+
 
 #Crea instancia de fastapi
 app = FastAPI()
 app.title = "Aplicación de ventas"#Le damos titulo a la instancia en documentación
 app.version = '1.0.2'#Modificamos la version en documentación
+base.metadata.create_all(bind = motor)
 
 peces = [
     {
