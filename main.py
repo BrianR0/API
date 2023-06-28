@@ -23,19 +23,19 @@ peces = [
         "id":1,
         "Tipo":"Ranchu",
         "Importe":"$800.00",
-        "Tamaño": "Grande",
+        "Tamanio": "Grande",
     },
     {
         "id":2,
         "Tipo":"Escama de perla",
         "Importe":"$600.00",
-        "Tamaño":"Chico"
+        "Tamanio":"Chico"
     },
     {
         "id":3,
         "Tipo":"Ranchu Calico",
         "Importe":"$800.00",
-        "Tamaño": "Grande",
+        "Tamanio": "Grande",
     },   
 ]
 
@@ -57,8 +57,8 @@ class Stock (BaseModel):
 
     id: int = Field(ge=0,le=20)
     Tipo: str 
-    Importe: str = Field(default="$00.00",max_length=8)
-    Tamaño: str
+    Importe: str 
+    Tamanio: str
 
     class Config:
         schema_extra = {
@@ -66,7 +66,7 @@ class Stock (BaseModel):
                 "id":3,
                 "Tipo":"Ranchu Calico",
                 "Importe":"$800.00",
-                "Tamaño": "Grande",
+                "Tamanio": "Grande",
             }
 
         }
@@ -109,8 +109,14 @@ def get_stock_query(tamaño:str = Query(min_length=4, max_length=20)) -> List[St
     
 @app.post('/create_stock',tags=['Stock'], response_model = dict, status_code = 201)
 def crea_stock(add:Stock) -> dict:
-    peces.append(dict(add))
-    #return peces
+    db = sesion()
+    #extraemos atributos para pasarlos como parametros
+    new_stock = Acuario(add.dict())
+    
+    #añadimos a la bd y hacemos un commit
+    db.add(new_stock)
+    db.commit()
+
     return JSONResponse(content={'mensaje':'Venta registrada'}, status_code = 201)
 
 @app.put('/update_stock',tags=['Stock'], response_model = dict, status_code = 201 )

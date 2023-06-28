@@ -7,5 +7,5 @@ class Acuario(base):
     __tablename__ = "Acuario"
     id = Column(Integer, primary_key = True)
     Tipo = Column(String)
-    Importe = Column(Float)
+    Importe = Column(String)
     Tamanio = Column(String)
