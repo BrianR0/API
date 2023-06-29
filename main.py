@@ -2,6 +2,8 @@ from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security.http import HTTPAuthorizationCredentials
+from fastapi.encoders import jsonable_encoder
+
 from pydantic import BaseModel, Field
 from typing import Optional,List
 
@@ -90,19 +92,29 @@ def mensaje():
 
 @app.get('/GET_STOCK', tags=['Stock'], response_model = List[Stock], status_code = 200, dependencies = [Depends(Portador())])#INDICAMOS EL TIPO DE RESPUESTA CON response_model en este caso una lista
 def get_stock() -> List[Stock]:
-    return JSONResponse(content=peces, status_code = 200) #usamos JSONResponse
+    db =  sesion()
+    resultado = db.query(Acuario).all()
+    return JSONResponse(content=jsonable_encoder(resultado), status_code = 200) #usamos JSONResponse
 
 @app.get('/Get_stock/{id}', tags=['Stock'], response_model = Stock, status_code=200)
 def get_stock(id: int = Path(ge=1,le=2000)) -> Stock:#Se valida que el id sea minimo 1 hasta 2000
-    for element in peces:
-        if element['id'] == id:
-            return JSONResponse(content = element, status_code = 200)
-    return JSONResponse(content=[], status_code = 404)
+    db = sesion()
+    resultado = db.query(Acuario).filter(Acuario.id == id).first()
+    if not resultado:
+        return JSONResponse(status_code=404, content={'Mensaje':'No hay peces con ese id'})
+    
+    return JSONResponse(content= jsonable_encoder(resultado), status_code = 200)
 
 @app.get('/Stock/', tags=['Stock'], response_model = List[Stock], status_code = 200)#Agregamos el codigo de respuesta
 def get_stock_query(tamaño:str = Query(min_length=4, max_length=20)) -> List[Stock]:
-    get_datos = [element for element in peces if element['Tamaño'] == tamaño]
-    return JSONResponse(content = get_datos, status_code = 200)
+    db = sesion()
+    resultado = db.query(Acuario).filter(Acuario.Tamanio == tamaño).all()
+    print(jsonable_encoder(resultado))
+    if not resultado:
+        return JSONResponse(status_code=404, content={'Mensaje':'No hay peces con ese tamaño'})
+    
+    return JSONResponse(content= jsonable_encoder(resultado), status_code = 200)
+
 
 
 
@@ -111,7 +123,7 @@ def get_stock_query(tamaño:str = Query(min_length=4, max_length=20)) -> List[St
 def crea_stock(add:Stock) -> dict:
     db = sesion()
     #extraemos atributos para pasarlos como parametros
-    new_stock = Acuario(add.dict())
+    new_stock = Acuario(**add.dict())
     
     #añadimos a la bd y hacemos un commit
     db.add(new_stock)
@@ -124,7 +136,7 @@ def update_stock(id:int, Stock:Stock) -> dict:
     for element in peces:
         if element['id'] == id:
             element["Tipo"] = Stock.Tipo
-            element["Tamaño"] = Stock.Tamaño
+            element["Tamaño"] = Stock.Tamanio
             element["Importe"] = Stock.Importe
     #return peces
     return JSONResponse(content = {'message':'Registro actualizado correctamente',
