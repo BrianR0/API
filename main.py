@@ -20,26 +20,7 @@ app.title = "Aplicación de ventas"#Le damos titulo a la instancia en documentac
 app.version = '1.0.2'#Modificamos la version en documentación
 base.metadata.create_all(bind = motor)
 
-peces = [
-    {
-        "id":1,
-        "Tipo":"Ranchu",
-        "Importe":"$800.00",
-        "Tamanio": "Grande",
-    },
-    {
-        "id":2,
-        "Tipo":"Escama de perla",
-        "Importe":"$600.00",
-        "Tamanio":"Chico"
-    },
-    {
-        "id":3,
-        "Tipo":"Ranchu Calico",
-        "Importe":"$800.00",
-        "Tamanio": "Grande",
-    },   
-]
+
 
 #creamos el modelo
 class User(BaseModel):
@@ -115,9 +96,6 @@ def get_stock_query(tamaño:str = Query(min_length=4, max_length=20)) -> List[St
     
     return JSONResponse(content= jsonable_encoder(resultado), status_code = 200)
 
-
-
-
     
 @app.post('/create_stock',tags=['Stock'], response_model = dict, status_code = 201)
 def crea_stock(add:Stock) -> dict:
@@ -133,11 +111,15 @@ def crea_stock(add:Stock) -> dict:
 
 @app.put('/update_stock',tags=['Stock'], response_model = dict, status_code = 201 )
 def update_stock(id:int, Stock:Stock) -> dict:
-    for element in peces:
-        if element['id'] == id:
-            element["Tipo"] = Stock.Tipo
-            element["Tamaño"] = Stock.Tamanio
-            element["Importe"] = Stock.Importe
+    db = sesion()
+
+    select = db.query(Acuario).filter(Acuario.id == id).first()
+    if not select:
+        return JSONResponse(status_code=404, content={'Mensaje':'No hay peces con ese id'})
+    select.Importe = Stock.Importe
+    select.Tamanio = Stock.Tamanio
+    select.Tamanio = Stock.Tipo
+    db.commit()
     #return peces
     return JSONResponse(content = {'message':'Registro actualizado correctamente',
                                    'code':'200'}, status_code = 201)
@@ -145,9 +127,12 @@ def update_stock(id:int, Stock:Stock) -> dict:
 
 @app.delete('/delete_stock', tags=['Stock'], response_model = List[Stock], status_code = 200)
 def delete_stock(id:int) ->dict:
-    for element in peces:
-        if element['id'] == id:
-            peces.remove(element)
+    db = sesion()
+    select = db.query(Acuario).filter(Acuario.id == id).first()
+    if not select:
+        return JSONResponse(status_code=404, content={'Mensaje':'No hay peces con ese id'})
+    db.delete(select)
+    db.commit()
     #return peces
-    return JSONResponse(content = {'message':'Registro actualizado correctamente',
+    return JSONResponse(content = {'message':'Registro borrado correctamente',
                                    'code':'200'}, status_code = 200)
