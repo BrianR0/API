@@ -69,7 +69,7 @@ def login(Usuario:User):
 
 @app.get('/',tags=['Inicio'])#tags para cambiar etiqueta en documentación
 def mensaje():
-    return HTMLResponse('<h2>TITULO HTML DESDE FASTAPI </h2>')
+    return HTMLResponse('<h2>HOLA, ESTA ES UNA API DE GOLDFISH </h2>')
 
 @app.get('/GET_STOCK', tags=['Stock'], response_model = List[Stock], status_code = 200, dependencies = [Depends(Portador())])#INDICAMOS EL TIPO DE RESPUESTA CON response_model en este caso una lista
 def get_stock() -> List[Stock]:
