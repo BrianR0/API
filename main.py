@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from typing import Optional,List
 
 from starlette.requests import Request
-from config.base_de_datos import sesion, motor, base
+from config.base_de_datos import sesion, motor, base, sesion2, motor2,text
 from modelos.venta import Acuario
 from jwt_config import *
 
@@ -32,7 +32,10 @@ class Portador(HTTPBearer):
     async def __call__(self, request:Request):
         autorizacion = await super().__call__(request)
         dato = validate_token(autorizacion.credentials)
-        if dato['email'] != 'test@gmail.com':
+        bd = sesion2()
+        query = 'SELECT email, pass FROM users WHERE email ="{}"'.format(dato['email'])
+        credentials = bd.execute(text(query)).fetchone()
+        if dato['email'] != credentials[0] and dato['key'] != credentials[1]:
             raise HTTPException(status_code=403, detail='No autorizado')
 
 #MODELO
@@ -57,11 +60,14 @@ class Stock (BaseModel):
 #RUTA DE LOGIN
 @app.post('/login', tags=['autentication'])
 def login(Usuario:User):
-    if Usuario.email == 'test@gmail.com' and Usuario.key == '1234':
-        #Obtenemos el token con la funcion pasandole el diccionario de usuario
-        token:str = get_token(Usuario.dict())
-    
-        return JSONResponse(status_code = 200, content = token)
+    bd = sesion2()
+    query = 'SELECT email, pass FROM users WHERE email ="{}"'.format(Usuario.email)
+    credentials = bd.execute(text(query)).fetchone()
+    if credentials != None:
+        if Usuario.email == credentials[0] and Usuario.key == credentials[1]:
+            #Obtenemos el token con la funcion pasandole el diccionario de usuario
+            token:str = get_token(Usuario.dict())
+            return JSONResponse(status_code = 200, content = token)
     else:
         return JSONResponse(status_code = 404, content={'Error':'Datos erroneos'})
 

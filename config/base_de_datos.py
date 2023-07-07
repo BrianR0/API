@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -15,3 +15,9 @@ motor = create_engine(ruta, echo=True)
 sesion = sessionmaker(bind=motor)
 #creamos base para manejar las tablas
 base = declarative_base()
+
+ruta2 = "mysql+pymysql://bro1018:Dualcore159@db4free.net/credentials"
+
+motor2 = create_engine(ruta2, echo=True)
+sesion2 = sessionmaker(bind=motor2)
+
